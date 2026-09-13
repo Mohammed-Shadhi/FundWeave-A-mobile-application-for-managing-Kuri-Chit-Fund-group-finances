@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "767350078472",
+    "project_id": "kuri-app-7a8db",
+    "storage_bucket": "kuri-app-7a8db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:767350078472:android:7605167c8212f67b6725bd",
+        "android_client_info": {
+          "package_name": "com.example.fundweave"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "767350078472-vu905smlh1bmau0g6g2320lofahjn519.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlH2CvxQ6IOGhpNSx2ITyUM9Ot0wSkjEs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "767350078472-vu905smlh1bmau0g6g2320lofahjn519.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "767350078472-dc2ckl9gkbvk7ad09pjlmtp1235er5t3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.kuriApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

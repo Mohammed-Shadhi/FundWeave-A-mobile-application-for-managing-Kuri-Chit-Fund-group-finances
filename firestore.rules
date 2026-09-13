@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper Functions ──
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function role() {
+      return userDoc().role;
+    }
+
+    function shopId() {
+      return userDoc().shopId;
+    }
+
+    function isAdmin() {
+      return isLoggedIn() && role() == 'admin';
+    }
+
+    function isMember() {
+      return isLoggedIn() && role() == 'member';
+    }
+
+    function isPlatformAdmin() {
+      return isLoggedIn() && role() == 'platform_admin';
+    }
+
+    function isOwnerShop(sid) {
+      return isAdmin() && shopId() == sid;
+    }
+
+    // ── Users ──
+    match /users/{uid} {
+      allow read: if isLoggedIn();
+      allow create: if isLoggedIn() && request.auth.uid == uid;
+      allow update: if isLoggedIn() &&
+        (request.auth.uid == uid || isPlatformAdmin());
+      allow delete: if isPlatformAdmin();
+    }
+
+    // ── Shops ──
+    match /shops/{sid} {
+      allow read: if isLoggedIn();
+      allow create: if isLoggedIn();
+      allow update: if isLoggedIn() &&
+        (isPlatformAdmin() || isOwnerShop(sid));
+      allow delete: if isPlatformAdmin();
+    }
+
+    // ── Members ──
+    match /members/{memberId} {
+      // Admin can CRUD own shop members
+      // Members can read own record only
+      allow read: if isLoggedIn() &&
+        (isPlatformAdmin() ||
+         isOwnerShop(resource.data.shopId) ||
+         (isMember() && resource.data.uid == request.auth.uid));
+      allow create: if isLoggedIn() &&
+        (isPlatformAdmin() || isAdmin());
+      allow update: if isLoggedIn() &&
+        (isPlatformAdmin() || isOwnerShop(resource.data.shopId));
+      allow delete: if isLoggedIn() &&
+        (isPlatformAdmin() || isOwnerShop(resource.data.shopId));
+    }
+
+    // ── Kuris ──
+    match /kuris/{kuriId} {
+      // Members can read kuris of their shop only
+      allow read: if isLoggedIn() &&
+        (isPlatformAdmin() ||
+         isOwnerShop(resource.data.shopId) ||
+         (isMember() && shopId() == resource.data.shopId));
+      allow create: if isAdmin() &&
+        request.resource.data.shopId == shopId();
+      allow update: if isAdmin() &&
+        resource.data.shopId == shopId();
+      allow delete: if isAdmin() &&
+        resource.data.shopId == shopId();
+    }
+
+    // ── Payments ──
+    match /payments/{paymentId} {
+      // Members see own payments; admin sees shop payments
+      allow read: if isLoggedIn() &&
+        (isPlatformAdmin() ||
+         isOwnerShop(resource.data.shopId) ||
+         (isMember() && resource.data.uid == request.auth.uid));
+      allow create: if isAdmin() &&
+        request.resource.data.shopId == shopId();
+      allow update: if isAdmin() &&
+        resource.data.shopId == shopId();
+      allow delete: if isAdmin() &&
+        resource.data.shopId == shopId();
+    }
+
+    // ── Receipts ──
+    match /receipts/{receiptId} {
+      // Members see own receipts; admin sees all shop receipts
+      // winnerUid is NOT stored in receipts — protected
+      allow read: if isLoggedIn() &&
+        (isPlatformAdmin() ||
+         isOwnerShop(resource.data.shopId) ||
+         (isMember() && resource.data.uid == request.auth.uid));
+      allow create: if isAdmin() &&
+        request.resource.data.shopId == shopId();
+      allow update: if false; // receipts are immutable
+      allow delete: if isPlatformAdmin();
+    }
+  }
+}
